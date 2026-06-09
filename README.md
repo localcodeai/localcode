@@ -1,14 +1,16 @@
 # LocalCode
 
-Open source CLI tools that unlock Apple's Foundation Models for local, privacy-first AI assistance.
+Proof-of-concept CLI tool showcasing Apple's Foundation Models framework for local, privacy-first AI assistance.
 
 ## What is this?
 
-LocalCode provides terminal-based AI assistance powered by Apple's on-device Foundation Models. It runs entirely on your Mac—no data leaves your machine.
+A working demo that proves you can build CLI tools powered by Apple's on-device Foundation Models. The AI runs entirely on your Mac—no cloud, no data leaving your machine.
+
+**This is a POC, not a production tool.** It's meant to demonstrate what's possible with AFM and inspire further development.
 
 ## Features
 
-- **Chat Interface**: Ask questions, get help with code, discuss architecture
+- **Chat Interface**: Ask questions, get help with code
 - **CLI Execution**: Run shell commands with `!` prefix (e.g., `!ls -la`, `!git status`)
 - **Privacy First**: All AI processing happens locally on Apple Silicon
 
@@ -21,59 +23,54 @@ LocalCode provides terminal-based AI assistance powered by Apple's on-device Fou
 ## Quick Start
 
 ```bash
-# Clone the repo
 git clone https://github.com/localcodeai/localcode.git
 cd localcode/LocalCode
 
-# Build
-swift build -p Sources/afmhelper
-
-# Run the Go TUI
-go build -o localcode .
-./localcode
-```
-
-Or run the AFM helper directly:
-
-```bash
-./Sources/afmhelper/afmhelper "Your question here"
-```
-
-## Project Structure
-
-```
-LocalCode/
-├── main.go           # Go TUI (Bubble Tea)
-└── Sources/
-    └── afmhelper/    # Swift AFM integration
-        └── main.swift
-```
-
-## Architecture
-
-- **TUI Layer**: Go + Bubble Tea for the terminal interface
-- **AI Layer**: Apple FoundationModels framework via Swift helper
-- **CLI Exec**: Native command execution for `!` prefixed commands
-
-## Development
-
-```bash
 # Build the Swift AFM helper
 cd Sources/afmhelper
 swiftc -o afmhelper main.swift -framework FoundationModels -target arm64-apple-macosx26.0
 
 # Build the Go TUI
+cd ../..
 go build -o localcode .
+
+# Run
+./localcode
 ```
+
+Or use the AFM helper directly:
+
+```bash
+./Sources/afmhelper/afmhelper "Your question here"
+```
+
+## Architecture
+
+```
+LocalCode/
+├── main.go           # Go TUI (Bubble Tea)
+└── Sources/
+    └── afmhelper/    # Swift → Apple FoundationModels
+        └── main.swift
+```
+
+- **TUI Layer**: Go + Bubble Tea
+- **AI Layer**: Apple FoundationModels framework (Swift)
+- **CLI Exec**: Native command execution for `!` commands
+
+## Why does this exist?
+
+Apple's Foundation Models framework is new and under-documented. This project proves it's viable for CLI tools and provides a reference implementation for others building on AFM.
+
+The framework is powerful—on-device inference, privacy-first, no API costs—but the tooling ecosystem is still nascent. LocalCode aims to change that.
 
 ## Contributing
 
-Contributions welcome! Please:
+POCs have lots of rough edges—and that's okay. Contributions welcome:
 
-1. Fork the repo
-2. Create a feature branch
-3. Make your changes
-4. Submit a PR
+1. Fork and create a feature branch
+2. Make your changes
+3. Open a PR
 
 ## License
 
