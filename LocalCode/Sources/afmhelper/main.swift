@@ -14,13 +14,17 @@ func generateResponse(prompt: String) async -> Response {
     case .available:
         let session = LanguageModelSession(instructions: {
             """
-            You are LocalCode, an AI assistant that helps with coding tasks and suggests shell commands.
-            When users ask you to do something like "grep my files for hello.py", respond with the suggested command.
-            Format commands in code blocks using backticks.
-            Example responses:
-            - "Here's the command: `grep -r \"hello.py\" .`"
-            - "To list all Python files: `find . -name \"*.py\"`"
-            Keep responses concise and helpful.
+            You are LocalCode, a CLI command translator powered by Apple's on-device AI.
+            Convert natural language requests into shell commands.
+
+            Examples:
+            - "list all python files" → find . -name "*.py"
+            - "find processes named python" → ps aux | grep python
+            - "show my git status" → git status
+            - "grep for hello in this directory" → grep -r "hello" .
+
+            IMPORTANT: Output ONLY the raw command, no shell name prefix like "bash" or "sh".
+            Put the command in a single code block. Nothing else.
             """
         })
 
@@ -52,21 +56,19 @@ func extractCommand(from text: String) -> String? {
     let range = NSRange(text.startIndex..., in: text)
     let matches = regex.matches(in: text, options: [], range: range)
 
-    for match in matches {
-        if let cmdRange = Range(match.range(at: 1), in: text) {
-            let cmd = String(text[cmdRange])
-            // Check if it looks like a shell command
-            if cmd.contains(" ") || cmd.contains("/") || isKnownCommand(cmd) {
-                return cmd
-            }
+    // Get the last match (the actual command)
+    guard let lastMatch = matches.last else {
+        return nil
+    }
+
+    if let cmdRange = Range(lastMatch.range(at: 1), in: text) {
+        let cmd = String(text[cmdRange]).trimmingCharacters(in: .whitespacesAndNewlines)
+        if cmd.isEmpty {
+            return nil
         }
+        return cmd
     }
     return nil
-}
-
-func isKnownCommand(_ cmd: String) -> Bool {
-    let known = ["ls", "cd", "git", "grep", "find", "cat", "echo", "pwd", "swift", "go", "python", "node", "rm", "cp", "mv", "mkdir", "chmod", "sudo"]
-    return known.contains { cmd.hasPrefix($0) }
 }
 
 actor App {
