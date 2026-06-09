@@ -90,7 +90,7 @@ Apple's Foundation Models framework is new and under-documented. This project pr
 
 ## Contributing
 
-POCs have rough edges—and that's okay. Contributions welcome:
+POCs have rough edges. Contributions welcome:
 
 1. Fork and create a feature branch
 2. Make your changes
