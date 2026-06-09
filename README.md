@@ -1,24 +1,18 @@
 # LocalCode
 
-Proof-of-concept CLI tool showcasing Apple's Foundation Models framework for local, privacy-first AI assistance.
+Turn natural language into CLI commands using Apple's on-device AI.
 
 ## What is this?
 
-A working demo that proves you can build CLI tools powered by Apple's on-device Foundation Models. The AI runs entirely on your Mac—no cloud, no data leaving your machine.
+LocalCode is a proof-of-concept that demonstrates building CLI tools with Apple's Foundation Models framework. Tell it what you want in plain English, it suggests the right command, you approve, and it runs.
 
-**This is a POC, not a production tool.** It's meant to demonstrate what's possible with AFM and inspire further development.
-
-## Features
-
-- **Natural Language → CLI**: Tell it what you want in plain English, it suggests the right command
-- **Apple's On-Device AI**: Uses Foundation Models framework - your data stays on your Mac
-- **You Approve, Then Run**: Command suggestions require your confirmation before execution
+**All AI processing happens locally on your Mac.** No cloud, no data leaving your machine.
 
 ## Requirements
 
 - Apple Silicon Mac (M1/M2/M3/M4)
 - macOS 26+
-- Xcode 26+ (for building from source)
+- Xcode 26+ (for building the Swift helper)
 - Go (for building the TUI)
 
 ## Quick Start
@@ -39,12 +33,30 @@ go build -o localcode .
 ./localcode
 ```
 
+## How It Works
+
+```
+You: "list all python files"
+LocalCode: find . -name "*.py"
+▶ Execute this command? [Enter] Run | [N] Cancel
+```
+
+The model translates your request into a command. You approve before it runs.
+
+## Example Commands to Try
+
+- "show me the largest files in this directory"
+- "count all files in this directory"
+- "find all python files"
+- "check if port 8080 is in use"
+- "show git status"
+
 ## Project Structure
 
 ```
 LocalCode/
 ├── main.go              # Go TUI (Bubble Tea)
-├── pre-commit.sh        # Pre-commit hook (optional)
+├── pre-commit.sh        # Pre-commit hook
 └── Sources/
     └── afmhelper/       # Swift → Apple FoundationModels
         └── main.swift
@@ -56,7 +68,7 @@ LocalCode/
 
 ## Development
 
-A pre-commit hook is included to ensure the project builds:
+A pre-commit hook ensures the project builds:
 
 ```bash
 cp pre-commit.sh .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
@@ -67,11 +79,9 @@ git config core.hooksPath .git/hooks
 
 Apple's Foundation Models framework is new and under-documented. This project proves it's viable for CLI tools and provides a reference implementation for others building on AFM.
 
-The framework is powerful—on-device inference, privacy-first, no API costs—but the tooling ecosystem is still nascent. LocalCode aims to change that.
-
 ## Contributing
 
-POCs have lots of rough edges—and that's okay. Contributions welcome:
+POCs have rough edges—and that's okay. Contributions welcome:
 
 1. Fork and create a feature branch
 2. Make your changes
