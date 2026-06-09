@@ -45,11 +45,20 @@ The model translates your request into a command. You approve before it runs.
 
 ## Example Commands to Try
 
+**File Operations:**
+- "list all python files"
+- "find all files named hello"
 - "show me the largest files in this directory"
 - "count all files in this directory"
-- "find all python files"
+
+**System & Network:**
 - "check if port 8080 is in use"
 - "show git status"
+
+**Search:**
+- "grep for hello in this directory"
+
+All commands show a confirmation dialog before running. You can edit the command before executing, or cancel.
 
 ## Project Structure
 
