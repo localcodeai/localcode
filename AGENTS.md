@@ -38,6 +38,19 @@ cd ../..
 go build -o localcode .
 ```
 
+## Go Module Imports
+
+**IMPORTANT**: The correct import paths for Bubble Tea and Lip Gloss are:
+
+```go
+"charm.land/bubbletea/v2"
+"charm.land/lipgloss/v2"
+```
+
+NOT `github.com/charmbracelet/...`. The charm.land domain redirects to the GitHub repos but the module path declaration matters for Go modules.
+
+If you see errors like "no required module provides package github.com/charmbracelet/bubbletea/v2", check that main.go has the charm.land imports, not github.com.
+
 ## Requirements
 
 - Apple Silicon Mac (M1/M2/M3/M4)
