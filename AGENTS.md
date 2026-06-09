@@ -1,54 +1,59 @@
 # LocalCode
 
-Open source tools that unlock and use Apple's foundation models.
+Proof-of-concept CLI tools that demonstrate Apple's Foundation Models framework for local, privacy-first AI.
+
+## Project Status
+
+**This is a POC** - not production software. It's meant to prove AFM is viable for CLI tools and inspire further development.
 
 ## Project Overview
 
-- **Mission**: Make Apple's on-device AI models accessible via open source CLI/TUI tools
-- **Current focus**: CLI chat interface using Apple's Foundation Models framework
-- **Open source**: Transparency and documentation are core values
+- **Mission**: Make Apple's on-device AI accessible via open source CLI/TUI tools
+- **Current focus**: Proof-of-concept TUI chat interface using AFM
+- **Stack**: Go TUI (Bubble Tea) + Swift AFM helper
 
 ## Architecture
 
-- **Language**: Swift
-- **Target**: macOS 26+ with Apple Silicon (Foundation Models requires M-series chips)
-- **Framework**: Apple's `FoundationModels` framework (part of Apple Intelligence)
-
-## Development Commands
-
-```bash
-# Build the project
-swift build
-
-# Run in debug mode
-swift run
-
-# Run tests
-swift test
-
-# Generate Xcode project
-swift package generate-xcodeproj
+```
+LocalCode/
+├── main.go           # Go TUI (Bubble Tea)
+└── Sources/
+    └── afmhelper/    # Swift → Apple FoundationModels
+        └── main.swift
 ```
 
-## Apple Foundation Models Framework Notes
+- **TUI Layer**: Go + Bubble Tea
+- **AI Layer**: Apple FoundationModels framework (Swift)
+- **CLI Exec**: Native command execution for `!` prefixed commands
 
-- Available in iOS 26, iPadOS 26, macOS 26 (all in beta)
-- Requires Apple Silicon (M1+)
-- On-device, privacy-first AI (no data leaves the device)
-- Access via `SystemLanguageModel.default` for general use
+## Building
+
+```bash
+# Build Swift AFM helper
+cd Sources/afmhelper
+swiftc -o afmhelper main.swift -framework FoundationModels -target arm64-apple-macosx26.0
+
+# Build Go TUI
+cd ../..
+go build -o localcode .
+```
+
+## Requirements
+
+- Apple Silicon Mac (M1/M2/M3/M4)
+- macOS 26+
+- Xcode 26+
+
+## Apple Foundation Models Framework
+
+- On-device, privacy-first AI (no data leaves device)
+- Access via `SystemLanguageModel.default`
 - Sessions (`LanguageModelSession`) maintain conversation history
-- Supports streaming responses and structured output via `@Generable` macro
-- Tools (custom function calling) via the `Tool` protocol
-
-## Testing POC
-
-Since macOS 26 is not yet released, the POC may require:
-- Xcode 26 beta
-- Running on Apple Silicon hardware
-- Enabling Apple Intelligence in system settings
+- Structured output via `@Generable` macro
+- Tool calling via the `Tool` protocol
 
 ## Code Style
 
-- Swift idioms and conventions
-- Structured output using `@Generable` and `@Guide` macros
+- Go for TUI, Swift for AFM integration
 - Async/await for all model interactions
+- Structured output using `@Generable` and `@Guide` macros
