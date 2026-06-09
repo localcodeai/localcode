@@ -13,7 +13,7 @@ if [ ! -f "$GO_PATH" ]; then
 fi
 
 if [ -z "$GO_PATH" ]; then
-    echo "WARNING: Go not found, skipping Go build"
+    echo "WARNING: Go not found, skipping Go build and tests"
 else
     # Build Go TUI
     echo "Building Go TUI..."
@@ -23,6 +23,14 @@ else
         exit 1
     fi
     echo "Go build: OK"
+
+    # Run Go tests
+    echo "Running Go tests..."
+    if ! "$GO_PATH" test -v . 2>&1; then
+        echo "FAILED: Go tests failed"
+        exit 1
+    fi
+    echo "Go tests: OK"
     cd ..
 fi
 
