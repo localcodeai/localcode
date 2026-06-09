@@ -38,6 +38,16 @@ cd ../..
 go build -o localcode .
 ```
 
+## Pre-commit Hook
+
+The project includes a pre-commit hook that builds both the Go TUI and Swift helper before each commit.
+
+To enable:
+```bash
+cp pre-commit.sh .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+git config core.hooksPath .git/hooks
+```
+
 ## Go Module Imports
 
 **IMPORTANT**: The correct import paths for Bubble Tea and Lip Gloss are:
