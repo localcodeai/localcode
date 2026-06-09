@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -44,7 +46,7 @@ func initialModel() Model {
 		messages: []Message{
 			{
 				role:    "assistant",
-				content: "Welcome to LocalCode! I'm powered by Apple's Foundation Models for on-device AI.\n\nI can help you with coding tasks and run CLI commands on your behalf.\n\nTry:\n- Type `!ls -la` to run a command\n- Ask me about your code\n- Ask for help\n\nNote: This POC uses mocked AI responses. Real AFM integration requires macOS 26.",
+				content: "Welcome to LocalCode! I'm powered by Apple's Foundation Models for on-device AI.\n\nI can help you with coding tasks and run CLI commands on your behalf.\n\nTry:\n- Type `!ls -la` to run a command\n- Ask me about your code\n- Ask for help",
 			},
 		},
 	}
@@ -145,8 +147,6 @@ func (m Model) handleConfirm(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 func (m Model) generateResponse(input string) tea.Cmd {
 	return func() tea.Msg {
-		time.Sleep(200 * time.Millisecond)
-
 		lowerInput := strings.ToLower(input)
 
 		if strings.HasPrefix(input, "!") || isCommandRequest(lowerInput) {
@@ -156,7 +156,7 @@ func (m Model) generateResponse(input string) tea.Cmd {
 			}
 		}
 
-		response := generateMockResponse(input)
+		response := callAFMHelper(input)
 		return responseMsg{response: response}
 	}
 }
@@ -231,34 +231,31 @@ func isKnownCommand(cmd string) bool {
 	return false
 }
 
-func generateMockResponse(input string) string {
-	lower := strings.ToLower(input)
+func callAFMHelper(prompt string) string {
+	helperPath := filepath.Join("Sources", "afmhelper", "afmhelper")
 
-	if strings.Contains(lower, "hello") || strings.Contains(lower, "hi") || strings.Contains(lower, "hey") {
-		return "Hello! I'm LocalCode, your on-device AI assistant. How can I help you today?"
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, helperPath, prompt)
+	output, err := cmd.Output()
+	if err != nil {
+		return fmt.Sprintf("Error calling AFM helper: %v", err)
 	}
 
-	if strings.Contains(lower, "who are you") || strings.Contains(lower, "what are you") {
-		return "I'm LocalCode - an open source CLI tool that uses Apple's Foundation Models for privacy-first, on-device AI assistance. Everything runs locally on your Apple Silicon Mac."
+	var response struct {
+		Content string `json:"content"`
+		Error   string `json:"error"`
+	}
+	if err := json.Unmarshal(output, &response); err != nil {
+		return fmt.Sprintf("Error parsing response: %v", err)
 	}
 
-	if strings.Contains(lower, "architecture") || strings.Contains(lower, "how does this work") {
-		return "LocalCode architecture:\n\n• TUI Layer: Go + Bubble Tea for the terminal interface\n• AI Layer: Apple FoundationModels framework (macOS 26+)\n• CLI Exec: Native command execution\n\nThe framework is designed to be transparent and extensible."
+	if response.Error != "" {
+		return fmt.Sprintf("AFM Error: %s", response.Error)
 	}
 
-	if strings.Contains(lower, "help") {
-		return "LocalCode Commands:\n\n• Type normally - I'll respond with AI\n• Prefix with `!` - I'll run it as a shell command\n• Examples:\n  - `!ls -la` - list files\n  - `!git status` - check git state\n  - `!swift build` - build project\n\nJust ask questions or describe what you need!"
-	}
-
-	if strings.Contains(lower, "git status") {
-		return "I can run `git status` for you! Just type `!git status` or should I do it automatically? (Type `!git status` to execute)"
-	}
-
-	if strings.Contains(lower, "build") || strings.Contains(lower, "test") {
-		return "I can run build/test commands! Use `!swift build` or `!swift test` to execute. The project uses Swift Package Manager."
-	}
-
-	return fmt.Sprintf("I understand you're asking about: %s\n\nThis is a POC with mocked AI responses. When macOS 26 releases with the FoundationModels framework, I'll provide real on-device AI responses.\n\nTry running a command with `!ls` or ask me something else!", truncate(input, 50))
+	return response.Content
 }
 
 func truncate(s string, max int) string {
