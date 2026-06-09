@@ -155,15 +155,10 @@ func (m Model) executeCommand(cmd string) tea.Cmd {
 }
 
 func runCommand(cmdStr string) (string, error) {
-	parts := strings.Fields(cmdStr)
-	if len(parts) == 0 {
-		return "", fmt.Errorf("empty command")
-	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, parts[0], parts[1:]...)
+	cmd := exec.CommandContext(ctx, "/bin/sh", "-c", cmdStr)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return string(output), err

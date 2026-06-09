@@ -57,18 +57,30 @@ func extractCommand(from text: String) -> String? {
     let matches = regex.matches(in: text, options: [], range: range)
 
     // Get the last match (the actual command)
-    guard let lastMatch = matches.last else {
-        return nil
+    if let lastMatch = matches.last,
+       let cmdRange = Range(lastMatch.range(at: 1), in: text) {
+        let cmd = String(text[cmdRange]).trimmingCharacters(in: .whitespacesAndNewlines)
+        if !cmd.isEmpty {
+            return cmd
+        }
     }
 
-    if let cmdRange = Range(lastMatch.range(at: 1), in: text) {
-        let cmd = String(text[cmdRange]).trimmingCharacters(in: .whitespacesAndNewlines)
-        if cmd.isEmpty {
-            return nil
-        }
-        return cmd
+    // No backticks found - check if content itself looks like a command
+    let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+    if isLikelyCommand(trimmed) {
+        return trimmed
     }
+
     return nil
+}
+
+func isLikelyCommand(_ text: String) -> Bool {
+    let knownCommands = ["find", "grep", "ls", "cd", "git", "cat", "echo", "pwd", "ps", "kill", "rm", "cp", "mv", "mkdir", "chmod", "sudo", "brew", "swift", "go", "python", "node", "curl", "wget", "ssh", "tar", "zip", "unzip"]
+    let words = text.split(separator: " ")
+    if let first = words.first {
+        return knownCommands.contains(String(first))
+    }
+    return false
 }
 
 actor App {
