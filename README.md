@@ -10,9 +10,9 @@ A working demo that proves you can build CLI tools powered by Apple's on-device 
 
 ## Features
 
-- **Chat Interface**: Ask questions, get help with code
-- **Command Suggestions**: Model suggests shell commands, you approve before running
-- **Privacy First**: All AI processing happens locally on Apple Silicon
+- **Natural Language → CLI**: Tell it what you want in plain English, it suggests the right command
+- **Apple's On-Device AI**: Uses Foundation Models framework - your data stays on your Mac
+- **You Approve, Then Run**: Command suggestions require your confirmation before execution
 
 ## Requirements
 
