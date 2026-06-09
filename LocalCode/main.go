@@ -23,11 +23,6 @@ type responseMsg struct {
 	response string
 }
 
-type commandResultMsg struct {
-	output string
-	err    error
-}
-
 type confirmCmdMsg struct {
 	cmd string
 }
@@ -46,7 +41,7 @@ func initialModel() Model {
 		messages: []Message{
 			{
 				role:    "assistant",
-				content: "Welcome to LocalCode! I'm powered by Apple's Foundation Models for on-device AI.\n\nI can help you with coding tasks and run CLI commands on your behalf.\n\nTry:\n- Type `!ls -la` to run a command\n- Ask me about your code\n- Ask for help",
+				content: "Welcome to LocalCode! I'm powered by Apple's Foundation Models for on-device AI.\n\nI can help you with coding tasks, explain code, or suggest commands.\n\nJust ask me anything!",
 			},
 		},
 	}
@@ -73,21 +68,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case confirmCmdMsg:
 		m.pendingCmd = msg.cmd
 		m.pendingConfirm = true
-		return m, nil
-
-	case commandResultMsg:
-		var response string
-		if msg.err != nil {
-			response = fmt.Sprintf("Error: %v\n%s", msg.err, msg.output)
-		} else {
-			response = fmt.Sprintf("Output:\n%s", msg.output)
-		}
-		m.messages = append(m.messages, Message{
-			role:    "assistant",
-			content: response,
-		})
-		m.pendingCmd = ""
-		m.pendingConfirm = false
 		return m, nil
 
 	case tea.KeyMsg:
@@ -129,7 +109,7 @@ func (m Model) handleInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 
 func (m Model) handleConfirm(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch msg.Key().String() {
-	case "y", "enter":
+	case "enter", "y":
 		m.pendingConfirm = false
 		cmd := m.pendingCmd
 		m.pendingCmd = ""
@@ -137,26 +117,26 @@ func (m Model) handleConfirm(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "n", "q", "esc":
 		m.messages = append(m.messages, Message{
 			role:    "assistant",
-			content: "Command cancelled.",
+			content: "Command cancelled. Let me know if you'd like to try something else.",
 		})
 		m.pendingCmd = ""
 		m.pendingConfirm = false
+	default:
+		if msg.Key().String() == "backspace" && len(m.pendingCmd) > 0 {
+			m.pendingCmd = m.pendingCmd[:len(m.pendingCmd)-1]
+		} else if msg.Key().Text != "" {
+			m.pendingCmd += msg.Key().Text
+		}
 	}
 	return m, nil
 }
 
 func (m Model) generateResponse(input string) tea.Cmd {
 	return func() tea.Msg {
-		lowerInput := strings.ToLower(input)
-
-		if strings.HasPrefix(input, "!") || isCommandRequest(lowerInput) {
-			cmd := extractCommand(input)
-			if cmd != "" {
-				return confirmCmdMsg{cmd: cmd}
-			}
+		response, cmd := callAFMHelper(input)
+		if cmd != "" {
+			return confirmCmdMsg{cmd: cmd}
 		}
-
-		response := callAFMHelper(input)
 		return responseMsg{response: response}
 	}
 }
@@ -164,7 +144,13 @@ func (m Model) generateResponse(input string) tea.Cmd {
 func (m Model) executeCommand(cmd string) tea.Cmd {
 	return func() tea.Msg {
 		output, err := runCommand(cmd)
-		return commandResultMsg{output: output, err: err}
+		var response string
+		if err != nil {
+			response = fmt.Sprintf("Error running command: %v\n%s", err, output)
+		} else {
+			response = fmt.Sprintf("Output:\n%s", output)
+		}
+		return responseMsg{response: response}
 	}
 }
 
@@ -174,7 +160,7 @@ func runCommand(cmdStr string) (string, error) {
 		return "", fmt.Errorf("empty command")
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, parts[0], parts[1:]...)
@@ -185,53 +171,7 @@ func runCommand(cmdStr string) (string, error) {
 	return string(output), nil
 }
 
-func isCommandRequest(input string) bool {
-	triggers := []string{"run ", "execute ", "command ", "shell ", "bash "}
-	for _, t := range triggers {
-		if strings.Contains(input, t) {
-			return true
-		}
-	}
-	return false
-}
-
-func extractCommand(input string) string {
-	if strings.HasPrefix(input, "!") {
-		return strings.TrimPrefix(input, "!")
-	}
-
-	markers := []string{"run `", "execute `", "command `", "`"}
-	for _, marker := range markers {
-		if idx := strings.Index(input, marker); idx != -1 {
-			start := idx + len(marker)
-			if end := strings.Index(input[start:], "`"); end != -1 {
-				return input[start : start+end]
-			}
-		}
-	}
-
-	words := strings.Fields(input)
-	if len(words) >= 2 && isKnownCommand(words[0]) {
-		parts := strings.SplitN(input, " ", 2)
-		if len(parts) == 2 {
-			return parts[1]
-		}
-	}
-
-	return ""
-}
-
-func isKnownCommand(cmd string) bool {
-	known := []string{"ls", "git", "pwd", "echo", "cat", "head", "tail", "grep", "find", "swift", "go", "python", "node"}
-	for _, k := range known {
-		if cmd == k {
-			return true
-		}
-	}
-	return false
-}
-
-func callAFMHelper(prompt string) string {
+func callAFMHelper(prompt string) (string, string) {
 	helperPath := filepath.Join("Sources", "afmhelper", "afmhelper")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
@@ -240,29 +180,23 @@ func callAFMHelper(prompt string) string {
 	cmd := exec.CommandContext(ctx, helperPath, prompt)
 	output, err := cmd.Output()
 	if err != nil {
-		return fmt.Sprintf("Error calling AFM helper: %v", err)
+		return fmt.Sprintf("Error calling AFM helper: %v", err), ""
 	}
 
 	var response struct {
 		Content string `json:"content"`
 		Error   string `json:"error"`
+		Command string `json:"command"`
 	}
 	if err := json.Unmarshal(output, &response); err != nil {
-		return fmt.Sprintf("Error parsing response: %v", err)
+		return fmt.Sprintf("Error parsing response: %v", err), ""
 	}
 
 	if response.Error != "" {
-		return fmt.Sprintf("AFM Error: %s", response.Error)
+		return fmt.Sprintf("AFM Error: %s", response.Error), ""
 	}
 
-	return response.Content
-}
-
-func truncate(s string, max int) string {
-	if len(s) <= max {
-		return s
-	}
-	return s[:max] + "..."
+	return response.Content, response.Command
 }
 
 func (m Model) View() tea.View {
@@ -284,16 +218,12 @@ func (m Model) View() tea.View {
 	}
 
 	if m.pendingConfirm {
-		sb.WriteString(fmt.Sprintf("\n%s %s", lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("11")).Render("Confirm:"), m.pendingCmd))
-		sb.WriteString(fmt.Sprintf("\n%s ", lipgloss.NewStyle().Faint(true).Render("[Y]es [N]o [Q]uit")))
-	}
-
-	sb.WriteString(fmt.Sprintf("\n\n%s%s ", lipgloss.NewStyle().Faint(true).Render(">"), m.input))
-
-	if m.pendingConfirm {
-		sb.WriteString(fmt.Sprintf("\n%s ", lipgloss.NewStyle().Faint(true).Render("Ctrl+C: Quit | Enter: Execute | Esc: Cancel")))
+		sb.WriteString(fmt.Sprintf("\n%s\n", lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("11")).Render("▶ Execute this command?")))
+		sb.WriteString(fmt.Sprintf("%s\n", lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("12")).Render(m.pendingCmd)))
+		sb.WriteString(fmt.Sprintf("\n%s ", lipgloss.NewStyle().Faint(true).Render("[Enter] Run | [N] Cancel | Edit command")))
 	} else {
-		sb.WriteString(fmt.Sprintf("\n%s ", lipgloss.NewStyle().Faint(true).Render("Ctrl+C: Quit | !: Run command")))
+		sb.WriteString(fmt.Sprintf("\n\n%s%s ", lipgloss.NewStyle().Faint(true).Render(">"), m.input))
+		sb.WriteString(fmt.Sprintf("\n%s ", lipgloss.NewStyle().Faint(true).Render("Ctrl+C: Quit")))
 	}
 
 	v := tea.NewView(sb.String())
