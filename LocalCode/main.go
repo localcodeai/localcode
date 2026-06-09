@@ -160,6 +160,16 @@ func runCommand(cmdStr string) (string, error) {
 
 	cmd := exec.CommandContext(ctx, "/bin/sh", "-c", cmdStr)
 	output, err := cmd.CombinedOutput()
+
+	// Exit code 1 often means "nothing found" (e.g., lsof, grep, find with no matches)
+	// This is a valid result, not an error
+	if exitErr, ok := err.(*exec.ExitError); ok {
+		if exitErr.ExitCode() == 1 {
+			// Command ran but found nothing - not an error
+			return string(output), nil
+		}
+	}
+
 	if err != nil {
 		return string(output), err
 	}
