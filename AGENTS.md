@@ -80,3 +80,19 @@ If you see errors like "no required module provides package github.com/charmbrac
 - Go for TUI, Swift for AFM integration
 - Async/await for all model interactions
 - Structured output using `@Generable` and `@Guide` macros
+
+## Session Notes
+
+When wrapping up a session (end of day, user leaving, or session is pausing), write a session note:
+
+```bash
+sessions/YYYY-MM-DD_HHMM.md
+```
+
+Content should include:
+- What's working / recent progress
+- Test commands that work
+- Known limitations or bugs
+- Next steps or things to improve
+
+Commit session notes so they can be reviewed later.
