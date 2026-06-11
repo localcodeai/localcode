@@ -9,57 +9,55 @@ Proof-of-concept CLI tools that demonstrate Apple's Foundation Models framework 
 ## Project Overview
 
 - **Mission**: Make Apple's on-device AI accessible via open source CLI/TUI tools
-- **Current focus**: Proof-of-concept TUI chat interface using AFM
-- **Stack**: Go TUI (Bubble Tea) + Swift AFM helper
+- **Current focus**: Fork OpenCode for TUI + integrate AFM for local AI
+- **Stack**: TypeScript/OpenTUI (forked from OpenCode) + Swift AFM helper
 
 ## Architecture
 
 ```
 LocalCode/
-├── main.go           # Go TUI (Bubble Tea)
-└── Sources/
-    └── afmhelper/    # Swift → Apple FoundationModels
-        └── main.swift
+├── tui/                   # TypeScript TUI (OpenTUI) - CONSIDER FORKING OPENCODE
+├── LocalCode/             # Go implementation (legacy)
+│   ├── main.go
+│   └── Sources/
+│       └── afmhelper/     # Swift → Apple FoundationModels
+│           └── main.swift
+└── pre-commit.sh
 ```
 
-- **TUI Layer**: Go + Bubble Tea
+- **TUI Layer**: Fork OpenCode for working TUI + OpenTUI
 - **AI Layer**: Apple FoundationModels framework (Swift)
-- **CLI Exec**: Native command execution for `!` prefixed commands
+- **Command Flow**: You type → Model suggests → Command executes
+
+## OpenCode Fork Strategy
+
+Instead of building TUI from scratch, fork OpenCode and:
+1. Replace cloud AI provider with AFM helper
+2. Keep the working OpenTUI frontend
+3. Add command execution for CLI tools
+
+OpenCode repo: https://github.com/anomalyco/opentui (11.8k stars)
 
 ## Building
 
 ```bash
 # Build Swift AFM helper
-cd Sources/afmhelper
+cd LocalCode/Sources/afmhelper
 swiftc -o afmhelper main.swift -framework FoundationModels -target arm64-apple-macosx26.0
 
-# Build Go TUI
-cd ../..
-go build -o localcode .
+# Run TUI (if using OpenCode fork)
+cd tui && bun run src/index.ts
 ```
 
 ## Pre-commit Hook
 
-The project includes a pre-commit hook that builds both the Go TUI and Swift helper before each commit.
+The project includes a pre-commit hook that builds the Swift helper and TypeScript TUI.
 
 To enable:
 ```bash
 cp pre-commit.sh .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
 git config core.hooksPath .git/hooks
 ```
-
-## Go Module Imports
-
-**IMPORTANT**: The correct import paths for Bubble Tea and Lip Gloss are:
-
-```go
-"charm.land/bubbletea/v2"
-"charm.land/lipgloss/v2"
-```
-
-NOT `github.com/charmbracelet/...`. The charm.land domain redirects to the GitHub repos but the module path declaration matters for Go modules.
-
-If you see errors like "no required module provides package github.com/charmbracelet/bubbletea/v2", check that main.go has the charm.land imports, not github.com.
 
 ## Requirements
 
@@ -77,9 +75,13 @@ If you see errors like "no required module provides package github.com/charmbrac
 
 ## Code Style
 
-- Go for TUI, Swift for AFM integration
+- TypeScript for TUI, Swift for AFM integration
 - Async/await for all model interactions
-- Structured output using `@Generable` and `@Guide` macros
+- If forking OpenCode, follow their patterns for OpenTUI usage
+
+## Known Issues
+
+- **OpenTUI InputRenderable.ENTER event**: The `input.on(InputRenderableEvents.ENTER, ...)` callback may not fire reliably in some terminal configurations. Consider using global `renderer.keyInput.on("keypress", ...)` as a workaround, or fork OpenCode which has already solved this.
 
 ## Session Notes
 

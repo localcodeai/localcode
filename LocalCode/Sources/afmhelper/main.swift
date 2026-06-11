@@ -36,10 +36,7 @@ func generateResponse(prompt: String) async -> Response {
 
         do {
             let result = try await session.respond(to: prompt)
-
-            // Extract command from response
             let command = extractCommand(from: result.content)
-
             return Response(content: result.content, error: nil, command: command)
         } catch {
             return Response(content: "", error: error.localizedDescription, command: nil)
@@ -53,7 +50,6 @@ func generateResponse(prompt: String) async -> Response {
 }
 
 func extractCommand(from text: String) -> String? {
-    // Look for code blocks with backticks
     let pattern = "`([^`]+)`"
     guard let regex = try? NSRegularExpression(pattern: pattern, options: []) else {
         return nil
@@ -62,7 +58,6 @@ func extractCommand(from text: String) -> String? {
     let range = NSRange(text.startIndex..., in: text)
     let matches = regex.matches(in: text, options: [], range: range)
 
-    // Get the last match (the actual command)
     if let lastMatch = matches.last,
        let cmdRange = Range(lastMatch.range(at: 1), in: text) {
         let cmd = String(text[cmdRange]).trimmingCharacters(in: .whitespacesAndNewlines)
@@ -71,7 +66,6 @@ func extractCommand(from text: String) -> String? {
         }
     }
 
-    // No backticks found - check if content itself looks like a command
     let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
     if isLikelyCommand(trimmed) {
         return trimmed
@@ -81,7 +75,7 @@ func extractCommand(from text: String) -> String? {
 }
 
 func isLikelyCommand(_ text: String) -> Bool {
-    let knownCommands = ["find", "grep", "ls", "cd", "git", "cat", "echo", "pwd", "ps", "kill", "rm", "cp", "mv", "mkdir", "chmod", "sudo", "brew", "swift", "go", "python", "node", "curl", "wget", "ssh", "tar", "zip", "unzip"]
+    let knownCommands = ["find", "grep", "ls", "cd", "git", "cat", "echo", "pwd", "ps", "kill", "rm", "cp", "mv", "mkdir", "chmod", "sudo", "brew", "swift", "go", "python", "node", "curl", "wget", "ssh", "tar", "zip", "unzip", "touch", "head", "tail", "sort", "uniq", "wc", "awk", "sed", "cut", "tree", "open", "xdg-open"]
     let words = text.split(separator: " ")
     if let first = words.first {
         return knownCommands.contains(String(first))

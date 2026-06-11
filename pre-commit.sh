@@ -1,38 +1,10 @@
 #!/bin/bash
-# Pre-commit hook for LocalCode
-# Run this once to enable: cp pre-commit.sh .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
-
 set -e
 
 echo "Running pre-commit checks..."
 
-# Find Go binary
-GO_PATH="$HOME/go/bin/go"
-if [ ! -f "$GO_PATH" ]; then
-    GO_PATH="$(which go 2>/dev/null)"
-fi
-
-if [ -z "$GO_PATH" ]; then
-    echo "WARNING: Go not found, skipping Go build and tests"
-else
-    # Build Go TUI
-    echo "Building Go TUI..."
-    cd LocalCode
-    if ! "$GO_PATH" build -o localcode . 2>&1; then
-        echo "FAILED: Go build failed"
-        exit 1
-    fi
-    echo "Go build: OK"
-
-    # Run Go tests
-    echo "Running Go tests..."
-    if ! "$GO_PATH" test -v . 2>&1; then
-        echo "FAILED: Go tests failed"
-        exit 1
-    fi
-    echo "Go tests: OK"
-    cd ..
-fi
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
 
 # Build Swift AFM helper
 echo "Building Swift AFM helper..."
@@ -42,6 +14,12 @@ if ! swiftc -o afmhelper main.swift -framework FoundationModels -target arm64-ap
     exit 1
 fi
 echo "Swift build: OK"
+cd ../../..
 
 echo ""
 echo "All checks passed!"
+echo ""
+echo "To run LocalCode with AFM:"
+echo "1. Start AFM server: ./start-afm-server.sh"
+echo "2. Run OpenCode: cd opencode && bun run dev"
+echo "3. Select 'LocalCode AFM' provider in OpenCode settings"

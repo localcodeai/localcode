@@ -13,24 +13,25 @@ LocalCode is a proof-of-concept that demonstrates building CLI tools with Apple'
 - Apple Silicon Mac (M1/M2/M3/M4)
 - macOS 26+
 - Xcode 26+ (for building the Swift helper)
-- Go (for building the TUI)
+- Bun (for running the TUI)
+- Zig (for building OpenTUI)
 
 ## Quick Start
 
 ```bash
 git clone https://github.com/localcodeai/localcode.git
-cd localcode/LocalCode
+cd localcode
+
+# Install dependencies
+cd tui && bun install && cd ..
+cd LocalCode/Sources/afmhelper
 
 # Build the Swift AFM helper
-cd Sources/afmhelper
 swiftc -o afmhelper main.swift -framework FoundationModels -target arm64-apple-macosx26.0
 
-# Build the Go TUI
-cd ../..
-go build -o localcode .
-
-# Run
-./localcode
+# Run the TUI
+cd ../../tui
+bun run src/index.ts
 ```
 
 ## How It Works
@@ -38,10 +39,12 @@ go build -o localcode .
 ```
 You: "list all python files"
 LocalCode: find . -name "*.py"
-▶ Execute this command? [Enter] Run | [N] Cancel
+Output: file1.py
+        file2.py
+        ...
 ```
 
-The model translates your request into a command. You approve before it runs.
+The model translates your request into a command, then executes it and shows the output.
 
 ## Example Commands to Try
 
@@ -58,22 +61,23 @@ The model translates your request into a command. You approve before it runs.
 **Search:**
 - "grep for hello in this directory"
 
-All commands show a confirmation dialog before running. You can edit the command before executing, or cancel.
-
 ## Project Structure
 
 ```
 LocalCode/
-├── main.go              # Go TUI (Bubble Tea)
-├── pre-commit.sh        # Pre-commit hook
-└── Sources/
-    └── afmhelper/       # Swift → Apple FoundationModels
-        └── main.swift
+├── tui/                   # TypeScript TUI (OpenTUI)
+│   └── src/index.ts
+├── LocalCode/             # Go implementation (legacy)
+│   ├── main.go
+│   └── Sources/
+│       └── afmhelper/     # Swift → Apple FoundationModels
+│           └── main.swift
+└── pre-commit.sh          # Pre-commit hook
 ```
 
-- **TUI Layer**: Go + Bubble Tea
+- **TUI Layer**: TypeScript + OpenTUI (Zig core)
 - **AI Layer**: Apple FoundationModels framework (Swift)
-- **Command Flow**: Model suggests → You approve → Command executes
+- **Command Flow**: You type → Model suggests → Command executes
 
 ## Development
 
