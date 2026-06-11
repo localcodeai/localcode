@@ -37,7 +37,6 @@ LocalCode/
 
 ```bash
 # 1. Start the AFM middleware server
-cd /Users/christophercarvalho/localcode
 ./start-afm-server.sh &
 
 # 2. Configure OpenCode provider in ~/.config/opencode/opencode.json:
