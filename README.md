@@ -116,10 +116,10 @@ curl -X POST http://localhost:8080/v1/chat/completions \
 - ✅ OpenCode provider integration via `@ai-sdk/openai-compatible`
 - ✅ Extracts user message from OpenCode's system prompt
 
-**Known Limitations:**
-- OpenCode sends full system prompt with all tool definitions - AFM can get confused and output partial commands
-- Command approval UI shows tool_calls but may need OpenCode-side configuration
-- Further debugging needed on OpenCode integration
+**QA Failing:**
+- ❌ OpenCode streaming shows text streaming down instead of command approval dialog
+- ❌ AFM outputs partial commands when receiving OpenCode's full system prompt
+- ❌ Further debugging needed on OpenCode integration
 
 ## Development
 
