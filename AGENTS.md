@@ -9,34 +9,33 @@ Proof-of-concept CLI tools that demonstrate Apple's Foundation Models framework 
 ## Project Overview
 
 - **Mission**: Make Apple's on-device AI accessible via open source CLI/TUI tools
-- **Current focus**: Fork OpenCode for TUI + integrate AFM for local AI
-- **Stack**: TypeScript/OpenTUI (forked from OpenCode) + Swift AFM helper
+- **Current focus**: Integrate AFM with OpenCode as local AI provider
+- **Stack**: OpenCode with `@ai-sdk/openai-compatible` + Swift AFM helper
 
 ## Architecture
 
 ```
 LocalCode/
-├── tui/                   # TypeScript TUI (OpenTUI) - CONSIDER FORKING OPENCODE
-├── LocalCode/             # Go implementation (legacy)
-│   ├── main.go
-│   └── Sources/
-│       └── afmhelper/     # Swift → Apple FoundationModels
-│           └── main.swift
-└── pre-commit.sh
+├── LocalCode/Sources/afmhelper/   # Swift AFM helper
+│   └── main.swift                # Apple FoundationModels integration
+├── start-afm-server.sh            # HTTP middleware (Bun)
+└── pre-commit.sh                  # Pre-commit hook
 ```
 
-- **TUI Layer**: Fork OpenCode for working TUI + OpenTUI
+- **AFM Server**: Bun HTTP server wrapping Swift AFM helper with OpenAI-compatible API
 - **AI Layer**: Apple FoundationModels framework (Swift)
-- **Command Flow**: You type → Model suggests → Command executes
+- **TUI Layer**: OpenCode with `@ai-sdk/openai-compatible` provider
+- **Command Flow**: You type → AFM suggests (tool call) → OpenCode approval UI → Command executes
 
-## OpenCode Fork Strategy
+## OpenCode Integration
 
-Instead of building TUI from scratch, fork OpenCode and:
-1. Replace cloud AI provider with AFM helper
-2. Keep the working OpenTUI frontend
-3. Add command execution for CLI tools
+No fork needed - use OpenCode's provider config with `@ai-sdk/openai-compatible`:
 
-OpenCode repo: https://github.com/anomalyco/opentui (11.8k stars)
+1. Add AFM provider to `~/.config/opencode/opencode.json`
+2. AFM server wraps Swift helper with OpenAI-compatible API
+3. OpenCode sees AFM as a standard provider
+
+OpenCode repo: https://github.com/anomalyco/opencode
 
 ## Building
 
@@ -44,9 +43,6 @@ OpenCode repo: https://github.com/anomalyco/opentui (11.8k stars)
 # Build Swift AFM helper
 cd LocalCode/Sources/afmhelper
 swiftc -o afmhelper main.swift -framework FoundationModels -target arm64-apple-macosx26.0
-
-# Run TUI (if using OpenCode fork)
-cd tui && bun run src/index.ts
 ```
 
 ## Pre-commit Hook
@@ -77,11 +73,10 @@ git config core.hooksPath .git/hooks
 
 - TypeScript for TUI, Swift for AFM integration
 - Async/await for all model interactions
-- If forking OpenCode, follow their patterns for OpenTUI usage
 
 ## Known Issues
 
-- **OpenTUI InputRenderable.ENTER event**: The `input.on(InputRenderableEvents.ENTER, ...)` callback may not fire reliably in some terminal configurations. Consider using global `renderer.keyInput.on("keypress", ...)` as a workaround, or fork OpenCode which has already solved this.
+- **OpenTUI InputRenderable.ENTER event**: The `input.on(InputRenderableEvents.ENTER, ...)` callback may not fire reliably in some terminal configurations. Consider using global `renderer.keyInput.on("keypress", ...)` as a workaround.
 
 ## Session Notes
 
@@ -98,3 +93,13 @@ Content should include:
 - Next steps or things to improve
 
 Commit session notes so they can be reviewed later.
+
+## Public Project Reminders
+
+**This is a public open source project.** Before every commit:
+
+1. **Update README.md** if you added new features, changed architecture, or modified the workflow
+2. **Check examples still work** - commands in README should be tested
+3. **Verify docs match code** - if you changed how something works, update the docs
+
+README is often the first thing new users see. Outdated docs = bad first impression.

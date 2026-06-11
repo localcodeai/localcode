@@ -13,6 +13,7 @@ if [ ! -f "$AFMHELPER" ]; then
 fi
 
 echo "Starting AFM HTTP Server on http://localhost:$SERVER_PORT"
+echo "Press Ctrl+C to stop"
 
 bun --eval '
 import { spawn } from "bun";
@@ -50,9 +51,11 @@ const server = Bun.serve({
       try {
         const body = await req.json();
         const messages = body.messages || [];
-        const content = messages[messages.length - 1]?.content || "";
+        const lastUserMessage = [...messages].reverse().find(m => m.role === "user");
+        const content = lastUserMessage?.content || "";
         const stream = body.stream === true;
 
+        // Call AFM helper
         const proc = spawn({
           cmd: [AFM_HELPER, content],
           stdout: "pipe",
@@ -80,50 +83,67 @@ const server = Bun.serve({
           }, { status: 500, headers: { ...cors, "Content-Type": "application/json" } });
         }
 
-        const text = afmResponse.command || afmResponse.content || "";
+        // Extract command from AFM response
+        const command = afmResponse.command || afmResponse.content || "";
         const id = "chatcmpl-" + Date.now();
+        const toolCallId = "call_" + Date.now();
+        const toolName = "bash";
 
-        if (stream) {
-          const encoder = new TextEncoder();
-          const sse = new ReadableStream({
-            start(controller) {
-              const chunk = JSON.stringify({
-                id,
-                object: "chat.completion.chunk",
-                created: Date.now(),
-                model: "afm",
-                choices: [{ index: 0, delta: { content: text }, finish_reason: null }]
-              });
-              controller.enqueue(encoder.encode("data: " + chunk + "\n\n"));
-              const finalChunk = JSON.stringify({
-                id,
-                object: "chat.completion.chunk",
-                created: Date.now(),
-                model: "afm",
-                choices: [{ index: 0, delta: {}, finish_reason: "stop" }]
-              });
-              controller.enqueue(encoder.encode("data: " + finalChunk + "\n\n"));
-              controller.enqueue(encoder.encode("data: [DONE]\n\n"));
-              controller.close();
-            }
-          });
-          return new Response(sse, {
-            headers: { ...cors, "Content-Type": "text/event-stream", "Transfer-Encoding": "chunked" }
-          });
-        }
-
-        return Response.json({
+        // Create tool call response
+        const toolCallResponse = {
           id,
           object: "chat.completion",
           created: Date.now(),
           model: "afm",
           choices: [{
             index: 0,
-            message: { role: "assistant", content: text },
-            finish_reason: "stop"
+            message: {
+              role: "assistant",
+              content: null,
+              tool_calls: [{
+                id: toolCallId,
+                type: "function",
+                function: {
+                  name: toolName,
+                  arguments: JSON.stringify({ command: command.trim() })
+                }
+              }]
+            },
+            finish_reason: "tool_calls"
           }],
-          usage: { prompt_tokens: content.length, completion_tokens: text.length, total_tokens: content.length + text.length }
-        }, { headers: { ...cors, "Content-Type": "application/json" } });
+          usage: {
+            prompt_tokens: content.length,
+            completion_tokens: command.length,
+            total_tokens: content.length + command.length
+          }
+        };
+
+        if (stream) {
+          const encoder = new TextEncoder();
+          const sse = new ReadableStream({
+            start(controller) {
+              const send = (id, delta, finish) => {
+                const chunk = JSON.stringify({
+                  id,
+                  object: "chat.completion.chunk",
+                  created: Date.now(),
+                  model: "afm",
+                  choices: [{ index: 0, delta, finish_reason: finish }]
+                });
+                controller.enqueue(encoder.encode("data: " + chunk + "\n\n"));
+              };
+              send(id, { role: "assistant" }, null);
+              send(id, { tool_calls: [{ id: toolCallId, type: "function", function: { name: toolName, arguments: JSON.stringify({ command: command.trim() }) } }] }, "tool_calls");
+              controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+              controller.close();
+            }
+          });
+          return new Response(sse, { headers: { ...cors, "Content-Type": "text/event-stream", "Transfer-Encoding": "chunked" } });
+        }
+
+        return Response.json(toolCallResponse, {
+          headers: { ...cors, "Content-Type": "application/json" }
+        });
 
       } catch (error) {
         return Response.json({

@@ -10,4 +10,4 @@ LocalCode/localcode
 # IDE
 .idea/
 .vscode/
-*.swp
+*.swp.opencode/

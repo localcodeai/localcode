@@ -14,12 +14,12 @@ if ! swiftc -o afmhelper main.swift -framework FoundationModels -target arm64-ap
     exit 1
 fi
 echo "Swift build: OK"
-cd ../../..
+cd ../..
 
 echo ""
 echo "All checks passed!"
 echo ""
 echo "To run LocalCode with AFM:"
 echo "1. Start AFM server: ./start-afm-server.sh"
-echo "2. Run OpenCode: cd opencode && bun run dev"
-echo "3. Select 'LocalCode AFM' provider in OpenCode settings"
+echo "2. Run OpenCode: opencode"
+echo "3. Select 'LocalCode AFM' provider"

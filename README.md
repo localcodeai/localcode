@@ -1,10 +1,10 @@
 # LocalCode
 
-Turn natural language into CLI commands using Apple's on-device AI.
+Turn natural language into CLI commands using Apple's on-device AI, powered by OpenCode.
 
 ## What is this?
 
-LocalCode is a proof-of-concept that demonstrates building CLI tools with Apple's Foundation Models framework. Tell it what you want in plain English, it suggests the right command, you approve, and it runs.
+LocalCode is a proof-of-concept that integrates Apple Foundation Models (AFM) with OpenCode as a local AI provider. Tell it what you want in plain English, it suggests the right command via tool calls, and you approve before execution.
 
 **All AI processing happens locally on your Mac.** No cloud, no data leaving your machine.
 
@@ -13,38 +13,68 @@ LocalCode is a proof-of-concept that demonstrates building CLI tools with Apple'
 - Apple Silicon Mac (M1/M2/M3/M4)
 - macOS 26+
 - Xcode 26+ (for building the Swift helper)
-- Bun (for running the TUI)
-- Zig (for building OpenTUI)
+- Bun 1.3+
+
+## Architecture
+
+```
+LocalCode/
+├── LocalCode/Sources/afmhelper/   # Swift AFM helper
+│   └── main.swift                # Apple FoundationModels integration
+├── start-afm-server.sh           # HTTP middleware (Bun)
+└── pre-commit.sh                 # Pre-commit hook
+```
+
+**No fork needed** - uses global OpenCode with provider config in `~/.config/opencode/opencode.json`
+
+**Flow:**
+1. AFM Server wraps Swift helper with OpenAI-compatible API
+2. OpenCode uses AFM as a provider via `@ai-sdk/openai-compatible`
+3. AFM returns command suggestions as tool calls
+4. OpenCode shows command approval UI → user approves → command executes
 
 ## Quick Start
 
 ```bash
-git clone https://github.com/localcodeai/localcode.git
-cd localcode
+# 1. Start the AFM middleware server
+cd /Users/christophercarvalho/localcode
+./start-afm-server.sh &
 
-# Install dependencies
-cd tui && bun install && cd ..
-cd LocalCode/Sources/afmhelper
+# 2. Configure OpenCode provider in ~/.config/opencode/opencode.json:
+{
+  "provider": {
+    "localcode-afm": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "LocalCode AFM",
+      "options": {
+        "baseURL": "http://localhost:8080/v1"
+      },
+      "models": {
+        "afm": { "name": "Apple Foundation Models" }
+      }
+    }
+  }
+}
 
-# Build the Swift AFM helper
-swiftc -o afmhelper main.swift -framework FoundationModels -target arm64-apple-macosx26.0
+# 3. Run OpenCode
+opencode
 
-# Run the TUI
-cd ../../tui
-bun run src/index.ts
+# 4. Select "LocalCode AFM" provider via /models command
 ```
 
 ## How It Works
 
 ```
-You: "list all python files"
-LocalCode: find . -name "*.py"
-Output: file1.py
-        file2.py
-        ...
+You: "list all python files in this directory"
+OpenCode (AFM): [Tool Call: bash { command: "find . -name '*.py'" }]
+                 ↑ Approval UI appears with approve/reject buttons
+User: clicks approve
+OpenCode: executes find . -name '*.py'
+Output: ./file1.py
+        ./subdir/file2.py
 ```
 
-The model translates your request into a command, then executes it and shows the output.
+AFM acts as a command translator - it takes natural language and produces shell commands as tool calls that OpenCode can display with approval UI.
 
 ## Example Commands to Try
 
@@ -61,28 +91,45 @@ The model translates your request into a command, then executes it and shows the
 **Search:**
 - "grep for hello in this directory"
 
-## Project Structure
+## Testing the AFM Server
 
-```
-LocalCode/
-├── tui/                   # TypeScript TUI (OpenTUI)
-│   └── src/index.ts
-├── LocalCode/             # Go implementation (legacy)
-│   ├── main.go
-│   └── Sources/
-│       └── afmhelper/     # Swift → Apple FoundationModels
-│           └── main.swift
-└── pre-commit.sh          # Pre-commit hook
+```bash
+# Check server is running
+curl http://localhost:8080/v1/models
+
+# Test chat completion (returns tool call)
+curl -X POST http://localhost:8080/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{"model":"afm","messages":[{"role":"user","content":"hello"}]}'
+
+# Test streaming
+curl -X POST http://localhost:8080/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{"model":"afm","messages":[{"role":"user","content":"hello"}],"stream":true}'
 ```
 
-- **TUI Layer**: TypeScript + OpenTUI (Zig core)
-- **AI Layer**: Apple FoundationModels framework (Swift)
-- **Command Flow**: You type → Model suggests → Command executes
+## Project Status
+
+**Working:**
+- ✅ AFM server with OpenAI-compatible API
+- ✅ Tool call responses for command approval UI
+- ✅ SSE streaming support
+- ✅ OpenCode provider integration via `@ai-sdk/openai-compatible`
+- ✅ Extracts user message from OpenCode's system prompt
+
+**Known Limitations:**
+- OpenCode sends full system prompt with all tool definitions - AFM can get confused and output partial commands
+- Command approval UI shows tool_calls but may need OpenCode-side configuration
+- Further debugging needed on OpenCode integration
 
 ## Development
 
-A pre-commit hook ensures the project builds:
+Run pre-commit hook manually:
+```bash
+./pre-commit.sh
+```
 
+Or install as git hook:
 ```bash
 cp pre-commit.sh .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
 git config core.hooksPath .git/hooks
@@ -90,7 +137,7 @@ git config core.hooksPath .git/hooks
 
 ## Why does this exist?
 
-Apple's Foundation Models framework is new and under-documented. This project proves it's viable for CLI tools and provides a reference implementation for others building on AFM.
+Apple's Foundation Models framework is new and under-documented. This project proves it's viable for CLI tools and provides a reference implementation for others building on AFM with OpenCode.
 
 ## Contributing
 
