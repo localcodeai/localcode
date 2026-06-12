@@ -49,7 +49,9 @@ const server = Bun.serve({
 
     if (url.pathname === "/v1/chat/completions" && req.method === "POST") {
       try {
+        console.log("REQUEST:", req.url);
         const body = await req.json();
+        console.log("STREAM:", body.stream);
         const messages = body.messages || [];
         const lastUserMessage = [...messages].reverse().find(m => m.role === "user");
         const content = lastUserMessage?.content || "";
@@ -105,7 +107,7 @@ const server = Bun.serve({
                 type: "function",
                 function: {
                   name: toolName,
-                  arguments: JSON.stringify({ command: command.trim() })
+                  arguments: JSON.stringify({ command: command.trim(), description: "AFM generated command" })
                 }
               }]
             },
@@ -120,20 +122,72 @@ const server = Bun.serve({
 
         if (stream) {
           const encoder = new TextEncoder();
+          const streamId = "chatcmpl-" + Date.now();
+          const toolCallId = "call_" + Date.now();
+
           const sse = new ReadableStream({
             start(controller) {
-              const send = (id, delta, finish) => {
-                const chunk = JSON.stringify({
-                  id,
-                  object: "chat.completion.chunk",
-                  created: Date.now(),
-                  model: "afm",
-                  choices: [{ index: 0, delta, finish_reason: finish }]
-                });
-                controller.enqueue(encoder.encode("data: " + chunk + "\n\n"));
-              };
-              send(id, { role: "assistant" }, null);
-              send(id, { tool_calls: [{ id: toolCallId, type: "function", function: { name: toolName, arguments: JSON.stringify({ command: command.trim() }) } }] }, "tool_calls");
+              const chunk = JSON.stringify({
+                id: streamId,
+                object: "chat.completion.chunk",
+                created: Date.now(),
+                model: "afm",
+                choices: [{
+                  index: 0,
+                  delta: {
+                    role: "assistant",
+                    content: null,
+                    tool_calls: [{
+                      index: 0,
+                      id: toolCallId,
+                      type: "function",
+                      function: {
+                        name: toolName,
+                        arguments: ""
+                      }
+                    }]
+                  },
+                  finish_reason: null
+                }]
+              });
+              controller.enqueue(encoder.encode("data: " + chunk + "\n\n"));
+
+              const argsChunk = JSON.stringify({
+                id: streamId,
+                object: "chat.completion.chunk",
+                created: Date.now(),
+                model: "afm",
+                choices: [{
+                  index: 0,
+                  delta: {
+                    content: null,
+                    tool_calls: [{
+                      index: 0,
+                      id: toolCallId,
+                      type: "function",
+                      function: {
+                        name: "",
+arguments: JSON.stringify({ command: command.trim(), description: "AFM generated command" })
+                      }
+                    }]
+                  },
+                  finish_reason: null
+                }]
+              });
+              controller.enqueue(encoder.encode("data: " + argsChunk + "\n\n"));
+
+              const finishChunk = JSON.stringify({
+                id: streamId,
+                object: "chat.completion.chunk",
+                created: Date.now(),
+                model: "afm",
+                choices: [{
+                  index: 0,
+                  delta: {},
+                  finish_reason: "tool_calls"
+                }]
+              });
+              controller.enqueue(encoder.encode("data: " + finishChunk + "\n\n"));
               controller.enqueue(encoder.encode("data: [DONE]\n\n"));
               controller.close();
             }

@@ -62,6 +62,11 @@ func extractCommand(from text: String) -> String? {
        let cmdRange = Range(lastMatch.range(at: 1), in: text) {
         let cmd = String(text[cmdRange]).trimmingCharacters(in: .whitespacesAndNewlines)
         if !cmd.isEmpty {
+            let lines = cmd.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
+            let knownShellPrefixes = ["bash", "sh", "zsh", "fish", "dash"]
+            if lines.count > 1 && knownShellPrefixes.contains(lines[0].trimmingCharacters(in: .whitespaces)) {
+                return lines.dropFirst().joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
+            }
             return cmd
         }
     }
