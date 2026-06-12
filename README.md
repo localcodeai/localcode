@@ -46,7 +46,8 @@ LocalCode/
       "npm": "@ai-sdk/openai-compatible",
       "name": "LocalCode AFM",
       "options": {
-        "baseURL": "http://localhost:8080/v1"
+        "baseURL": "http://localhost:8080/v1",
+        "stream": false
       },
       "models": {
         "afm": { "name": "Apple Foundation Models" }
@@ -111,15 +112,54 @@ curl -X POST http://localhost:8080/v1/chat/completions \
 
 **Working:**
 - ✅ AFM server with OpenAI-compatible API
-- ✅ Tool call responses for command approval UI
-- ✅ SSE streaming support
+- ✅ Tool call responses with description field for OpenCode bash tool
+- ✅ SSE streaming support (chunk sequence for tool_calls)
 - ✅ OpenCode provider integration via `@ai-sdk/openai-compatible`
-- ✅ Extracts user message from OpenCode's system prompt
+- ✅ Non-streaming mode (set `stream: false` in provider config)
+- ✅ Command approval UI displays correctly
+- ✅ Shell prefix stripping for multi-line commands
 
-**QA Failing:**
-- ❌ OpenCode streaming shows text streaming down instead of command approval dialog
-- ❌ AFM outputs partial commands when receiving OpenCode's full system prompt
-- ❌ Further debugging needed on OpenCode integration
+**Known Limitations:**
+- Streaming mode with tool_calls may cause issues in some OpenCode configurations
+- Non-streaming mode recommended for stable behavior
+
+## Installation for Others
+
+### Manual Setup
+```bash
+# Clone the repo
+git clone https://github.com/localcodeai/localcode.git
+cd localcode
+
+# Start the AFM server
+./start-afm-server.sh &
+
+# Configure OpenCode provider (see Quick Start above)
+```
+
+### Future Distribution Options
+
+**Option 1: Setup Script**
+Create a `setup-localcode.sh` script that:
+1. Copies `start-afm-server.sh` to a bin directory
+2. Edits `~/.config/opencode/opencode.json` to add the provider
+3. Provides start/stop commands
+
+**Option 2: npm Package**
+```bash
+npm install -g @localcodeai/afm-provider
+localcode-afm-setup  # configures OpenCode and starts server
+```
+
+**Option 3: Homebrew Tap**
+```bash
+brew tap localcodeai/localcode
+brew install localcode
+localcode start  # starts AFM server
+opencode         # uses AFM automatically
+```
+
+Note: OpenCode's plugin system is for adding custom tools, not AI providers. The current approach uses OpenCode's built-in provider configuration system.
 
 ## Development
 
