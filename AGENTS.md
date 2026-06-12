@@ -101,5 +101,20 @@ Commit session notes so they can be reviewed later.
 1. **Update README.md** if you added new features, changed architecture, or modified the workflow
 2. **Check examples still work** - commands in README should be tested
 3. **Verify docs match code** - if you changed how something works, update the docs
+4. **Update Makefile** if you added new commands or scripts
+5. **Run `make test`** to ensure prompt tests pass
 
 README is often the first thing new users see. Outdated docs = bad first impression.
+
+## Agent Commands
+
+Use Makefile for common operations:
+```bash
+make help          # Show available commands
+make install        # Build Swift helper
+make start          # Start AFM server
+make test           # Run prompt test suite
+make server-test    # Run server curl tests
+make pre-commit     # Run all checks
+make clean          # Remove built artifacts
+```
