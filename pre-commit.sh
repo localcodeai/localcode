@@ -75,6 +75,18 @@ if ! echo "$STREAM_RESPONSE" | grep -q "chat.completion.chunk"; then
 fi
 echo "Streaming tool call: OK"
 
+# Test OpenCode integration
+echo ""
+echo "Testing OpenCode integration..."
+OPENCODE_OUTPUT=$(timeout 30 opencode run --model localcode-afm/afm "echo hello" 2>&1 || true)
+
+if ! echo "$OPENCODE_OUTPUT" | grep -q "permission requested"; then
+    echo "FAILED: OpenCode not showing approval UI"
+    echo "Output: $OPENCODE_OUTPUT"
+    exit 1
+fi
+echo "OpenCode integration: OK"
+
 echo ""
 echo "All checks passed!"
 echo ""
