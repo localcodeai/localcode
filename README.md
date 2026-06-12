@@ -44,56 +44,39 @@ LocalCode/
 
 ## Quick Start
 
-### Option 1: Setup Script (Recommended)
+### Option 1: Makefile (Recommended)
 ```bash
-# Clone and run setup
+git clone https://github.com/localcodeai/localcode.git
+cd localcode
+
+make install   # Build Swift helper
+make start      # Start AFM server
+
+opencode        # Select "LocalCode AFM" provider via /models
+```
+
+### Option 2: Setup Script
+```bash
 git clone https://github.com/localcodeai/localcode.git
 cd localcode
 ./setup-localcode.sh
-
-# Start the server
 ./start-afm-server.sh &
-
-# Run OpenCode
 opencode
-# Select "LocalCode AFM" provider via /models command
 ```
 
-### Option 2: Manual Setup
+### Option 3: Manual
 ```bash
-# 1. Clone the repo
 git clone https://github.com/localcodeai/localcode.git
 cd localcode
 
-# 2. Build the Swift AFM helper
+# Build Swift helper
 cd LocalCode/Sources/afmhelper
 swiftc -o afmhelper main.swift -framework FoundationModels -target arm64-apple-macosx26.0
 cd ../..
 
-# 3. Start the AFM middleware server
+# Start server and configure OpenCode (see manual config below)
 ./start-afm-server.sh &
-
-# 4. Configure OpenCode provider in ~/.config/opencode/opencode.json:
-{
-  "provider": {
-    "localcode-afm": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "LocalCode AFM",
-      "options": {
-        "baseURL": "http://localhost:8080/v1",
-        "stream": false
-      },
-      "models": {
-        "afm": { "name": "Apple Foundation Models" }
-      }
-    }
-  }
-}
-
-# 5. Run OpenCode
 opencode
-
-# 6. Select "LocalCode AFM" provider via /models command
 ```
 
 ## How It Works
@@ -127,35 +110,30 @@ AFM acts as a command translator - it takes natural language and produces shell 
 
 ## Testing
 
-### Quick Test
+### Makefile Commands
 ```bash
-# Check server is running
+make test         # Run prompt test suite (10 cases)
+make server-test  # Run server curl tests
+make pre-commit   # Run all checks
+```
+
+### Manual Testing
+```bash
+# Check server
 curl http://localhost:8080/v1/models
 
-# Test chat completion (returns tool call)
+# Test tool call
 curl -X POST http://localhost:8080/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{"model":"afm","messages":[{"role":"user","content":"hello"}]}'
 ```
 
-### Prompt Test Suite
-```bash
-# Run full test suite (10 test cases)
-./test-prompts.sh
-```
-
-Tests cover:
+### Test Coverage
 - File operations (list, filter, size)
 - Search commands (grep, find)
 - System commands (git, port check)
 - Count/stats (files, lines)
 - Simple commands (echo)
-
-### Pre-commit Hook
-```bash
-./pre-commit.sh
-```
-Runs: Swift build + server tests + OpenCode integration + prompt suite
 
 ## Project Status
 
