@@ -16,6 +16,7 @@ LocalCode is a proof-of-concept that integrates Apple Foundation Models (AFM) wi
 - macOS 26+
 - Xcode 26+ (for building the Swift helper)
 - Bun 1.3+
+- Node 18+ (for OpenCode and npm)
 
 ## Architecture
 
@@ -23,8 +24,14 @@ LocalCode is a proof-of-concept that integrates Apple Foundation Models (AFM) wi
 LocalCode/
 ├── LocalCode/Sources/afmhelper/   # Swift AFM helper
 │   └── main.swift                # Apple FoundationModels integration
+├── localcode-afm/                 # npm package for distribution
+│   ├── bin/start.sh              # Entry point
+│   ├── package.json              # Package config
+│   └── src/main.swift            # Swift source
 ├── start-afm-server.sh           # HTTP middleware (Bun)
-└── pre-commit.sh                 # Pre-commit hook
+├── setup-localcode.sh            # One-command setup script
+├── pre-commit.sh                 # Pre-commit hook with tests
+└── test-prompts.sh              # Prompt test suite
 ```
 
 **No fork needed** - uses global OpenCode with provider config in `~/.config/opencode/opencode.json`
@@ -37,11 +44,36 @@ LocalCode/
 
 ## Quick Start
 
+### Option 1: Setup Script (Recommended)
 ```bash
-# 1. Start the AFM middleware server
+# Clone and run setup
+git clone https://github.com/localcodeai/localcode.git
+cd localcode
+./setup-localcode.sh
+
+# Start the server
 ./start-afm-server.sh &
 
-# 2. Configure OpenCode provider in ~/.config/opencode/opencode.json:
+# Run OpenCode
+opencode
+# Select "LocalCode AFM" provider via /models command
+```
+
+### Option 2: Manual Setup
+```bash
+# 1. Clone the repo
+git clone https://github.com/localcodeai/localcode.git
+cd localcode
+
+# 2. Build the Swift AFM helper
+cd LocalCode/Sources/afmhelper
+swiftc -o afmhelper main.swift -framework FoundationModels -target arm64-apple-macosx26.0
+cd ../..
+
+# 3. Start the AFM middleware server
+./start-afm-server.sh &
+
+# 4. Configure OpenCode provider in ~/.config/opencode/opencode.json:
 {
   "provider": {
     "localcode-afm": {
@@ -58,10 +90,10 @@ LocalCode/
   }
 }
 
-# 3. Run OpenCode
+# 5. Run OpenCode
 opencode
 
-# 4. Select "LocalCode AFM" provider via /models command
+# 6. Select "LocalCode AFM" provider via /models command
 ```
 
 ## How It Works
@@ -93,8 +125,9 @@ AFM acts as a command translator - it takes natural language and produces shell 
 **Search:**
 - "grep for hello in this directory"
 
-## Testing the AFM Server
+## Testing
 
+### Quick Test
 ```bash
 # Check server is running
 curl http://localhost:8080/v1/models
@@ -103,12 +136,26 @@ curl http://localhost:8080/v1/models
 curl -X POST http://localhost:8080/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{"model":"afm","messages":[{"role":"user","content":"hello"}]}'
-
-# Test streaming
-curl -X POST http://localhost:8080/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -d '{"model":"afm","messages":[{"role":"user","content":"hello"}],"stream":true}'
 ```
+
+### Prompt Test Suite
+```bash
+# Run full test suite (10 test cases)
+./test-prompts.sh
+```
+
+Tests cover:
+- File operations (list, filter, size)
+- Search commands (grep, find)
+- System commands (git, port check)
+- Count/stats (files, lines)
+- Simple commands (echo)
+
+### Pre-commit Hook
+```bash
+./pre-commit.sh
+```
+Runs: Swift build + server tests + OpenCode integration + prompt suite
 
 ## Project Status
 
@@ -127,41 +174,30 @@ curl -X POST http://localhost:8080/v1/chat/completions \
 
 ## Installation for Others
 
-### Manual Setup
+### Setup Script (Recommended)
 ```bash
-# Clone the repo
 git clone https://github.com/localcodeai/localcode.git
 cd localcode
+./setup-localcode.sh
+```
 
-# Start the AFM server
+This installs:
+- `localcode-afm` command to start the server
+- OpenCode provider configuration
+
+### npm Package (Coming Soon)
+```bash
+npm install -g @localcodeai/afm
+localcode-afm  # start server
+```
+
+### Manual Setup
+```bash
+git clone https://github.com/localcodeai/localcode.git
+cd localcode
 ./start-afm-server.sh &
-
-# Configure OpenCode provider (see Quick Start above)
+# Then configure OpenCode provider manually (see Quick Start)
 ```
-
-### Future Distribution Options
-
-**Option 1: Setup Script**
-Create a `setup-localcode.sh` script that:
-1. Copies `start-afm-server.sh` to a bin directory
-2. Edits `~/.config/opencode/opencode.json` to add the provider
-3. Provides start/stop commands
-
-**Option 2: npm Package**
-```bash
-npm install -g @localcodeai/afm-provider
-localcode-afm-setup  # configures OpenCode and starts server
-```
-
-**Option 3: Homebrew Tap**
-```bash
-brew tap localcodeai/localcode
-brew install localcode
-localcode start  # starts AFM server
-opencode         # uses AFM automatically
-```
-
-Note: OpenCode's plugin system is for adding custom tools, not AI providers. The current approach uses OpenCode's built-in provider configuration system.
 
 ## Development
 
