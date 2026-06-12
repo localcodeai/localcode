@@ -150,7 +150,7 @@ curl -X POST http://localhost:8080/v1/chat/completions \
 - Streaming mode with tool_calls may cause issues in some OpenCode configurations
 - Non-streaming mode recommended for stable behavior
 
-## Installation for Others
+## Installation
 
 ### Setup Script (Recommended)
 ```bash
