@@ -2,6 +2,8 @@
 
 Turn natural language into CLI commands using Apple's on-device AI, powered by OpenCode.
 
+<img width="738" height="687" alt="Screenshot 2026-06-12 at 12 45 50" src="https://github.com/user-attachments/assets/e9061028-0c56-4d71-9189-0a31236592f9" />
+
 ## What is this?
 
 LocalCode is a proof-of-concept that integrates Apple Foundation Models (AFM) with OpenCode as a local AI provider. Tell it what you want in plain English, it suggests the right command via tool calls, and you approve before execution.
