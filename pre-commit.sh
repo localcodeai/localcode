@@ -87,6 +87,21 @@ if ! echo "$OPENCODE_OUTPUT" | grep -q "permission requested"; then
 fi
 echo "OpenCode integration: OK"
 
+# Run prompt test suite
+echo ""
+echo "Running prompt test suite..."
+if [ -f "$SCRIPT_DIR/test-prompts.sh" ]; then
+    chmod +x "$SCRIPT_DIR/test-prompts.sh"
+    if ! "$SCRIPT_DIR/test-prompts.sh" > /tmp/prompt-tests.log 2>&1; then
+        echo "FAILED: Prompt test suite failed"
+        cat /tmp/prompt-tests.log
+        exit 1
+    fi
+    echo "Prompt test suite: OK"
+else
+    echo "SKIPPED: test-prompts.sh not found"
+fi
+
 echo ""
 echo "All checks passed!"
 echo ""
