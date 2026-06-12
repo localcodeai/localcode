@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate bash scripts
+        run: |
+          for script in start-afm-server.sh setup-localcode.sh pre-commit.sh; do
+            if [ -f "$script" ]; then
+              bash -n "$script" && echo "✓ $script is valid" || exit 1
+            fi
+          done
+
+      - name: Check Swift files exist
+        run: |
+          if [ -f "LocalCode/Sources/afmhelper/main.swift" ]; then
+            echo "✓ Swift source exists"
+          else
+            echo "✗ Swift source not found"
+            exit 1
+          fi
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check README exists
+        run: |
+          if [ -f "README.md" ]; then
+            echo "✓ README.md exists"
+            wc -l README.md
+          else
+            echo "✗ README.md not found"
+            exit 1
+          fi
+
+      - name: Check QA-TESTING.md exists
+        run: |
+          if [ -f "QA-TESTING.md" ]; then
+            echo "✓ QA-TESTING.md exists"
+          else
+            echo "✗ QA-TESTING.md not found"
+            exit 1
+          fi

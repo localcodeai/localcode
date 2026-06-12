@@ -1,0 +1,52 @@
+name: AFM Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  afm-tests:
+    # Only run on macOS since AFM requires Apple Silicon + macOS 26+
+    runs-on: macos-latest
+    if: false  # Disable until macOS 26+ runners available
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check macOS version
+        run: sw_vers
+
+      - name: Check Apple Silicon
+        run: sysctl -n machdep.cpu.brand_string
+
+      - name: Install Bun
+        run: brew install bun
+
+      - name: Build Swift AFM helper
+        run: |
+          cd LocalCode/Sources/afmhelper
+          swiftc -o afmhelper main.swift -framework FoundationModels -target arm64-apple-macosx26.0
+
+      - name: Start AFM server
+        run: |
+          ./start-afm-server.sh &
+          sleep 3
+
+      - name: Test /v1/models
+        run: curl -s http://localhost:8080/v1/models | grep -q "afm"
+
+      - name: Test non-streaming tool call
+        run: |
+          curl -s -X POST http://localhost:8080/v1/chat/completions \
+            -H "Content-Type: application/json" \
+            -d '{"model":"afm","messages":[{"role":"user","content":"test"}],"stream":false}' \
+            | grep -q "tool_calls"
+
+      - name: Test streaming tool call
+        run: |
+          curl -s -X POST http://localhost:8080/v1/chat/completions \
+            -H "Content-Type: application/json" \
+            -d '{"model":"afm","messages":[{"role":"user","content":"test"}],"stream":true}' \
+            | grep -q "chat.completion.chunk"
