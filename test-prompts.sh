@@ -7,6 +7,16 @@ cd "$SCRIPT_DIR"
 echo "Running OpenCode prompt test suite..."
 echo ""
 
+# Check server is running
+echo "Checking AFM server..."
+if ! curl -s http://localhost:8080/v1/models 2>/dev/null | grep -q "afm"; then
+    echo "FAILED: AFM server not running on http://localhost:8080"
+    echo "Start the server with: ./start-afm-server.sh"
+    exit 1
+fi
+echo "Server OK"
+echo ""
+
 TEST_RESULTS=()
 FAILED=0
 
