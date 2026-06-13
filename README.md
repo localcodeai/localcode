@@ -163,12 +163,6 @@ This installs:
 - `localcode-afm` command to start the server
 - OpenCode provider configuration
 
-### npm Package (Coming Soon)
-```bash
-npm install -g @localcodeai/afm
-localcode-afm  # start server
-```
-
 ### Manual Setup
 ```bash
 git clone https://github.com/localcodeai/localcode.git
