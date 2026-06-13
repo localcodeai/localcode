@@ -7,6 +7,7 @@ export default defineConfig({
   outDir: '../.vitepress/dist',
   base: '/localcode/',
   head: [
+    ['meta', { name: 'google-site-verification', content: 'rRUwdSO7kBeRdCTMulmfuGu0pp2mYFrUG9SIi3VjJF8' }],
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/localcode/favicon.svg' }],
     ['meta', { name: 'theme-color', content: '#646cff' }],
     ['meta', { property: 'og:type', content: 'website' }],
