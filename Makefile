@@ -17,6 +17,29 @@ install:
 	@echo "Building Swift AFM helper..."
 	@cd LocalCode/Sources/afmhelper && swiftc -o afmhelper main.swift -framework FoundationModels -target arm64-apple-macosx26.0
 	@echo "Swift build: OK"
+	@echo "Configuring OpenCode provider..."
+	@INSTALL_DIR="$(HOME)/.local/bin" && \
+	CONFIG_FILE="$(HOME)/.config/opencode/opencode.json" && \
+	mkdir -p "$$INSTALL_DIR" && \
+	cp "$(PWD)/start-afm-server.sh" "$$INSTALL_DIR/localcode-afm" && \
+	chmod +x "$$INSTALL_DIR/localcode-afm" && \
+	if [ -f "$$CONFIG_FILE" ]; then \
+		if grep -q "localcode-afm" "$$CONFIG_FILE"; then \
+			echo "Provider already configured"; \
+		else \
+			node -e " \
+const fs=require('fs'); \
+const c=JSON.parse(fs.readFileSync('$$CONFIG_FILE','utf8')); \
+c.provider=c.provider||{}; \
+c.provider['localcode-afm']={npm:'@ai-sdk/openai-compatible',name:'LocalCode AFM',options:{baseURL:'http://localhost:8080/v1',stream:false},models:{afm:{name:'Apple Foundation Models'}}}; \
+fs.writeFileSync('$$CONFIG_FILE',JSON.stringify(c,null,2));"; \
+			echo "Provider added"; \
+		fi; \
+	else \
+		mkdir -p "$$(dirname $$CONFIG_FILE)" && \
+		echo '{\"$schema\":\"https://opencode.ai/config.json\",\"mcp\":{},\"provider\":{\"localcode-afm\":{\"npm\":\"@ai-sdk/openai-compatible\",\"name\":\"LocalCode AFM\",\"options\":{\"baseURL\":\"http://localhost:8080/v1\",\"stream\":false},\"models\":{\"afm\":{\"name\":\"Apple Foundation Models\"}}}}}' > "$$CONFIG_FILE"; \
+		echo "Config created"; \
+	fi
 	@echo "Run 'make start' to start the server, then 'opencode'"
 
 start:
@@ -47,5 +70,4 @@ pre-commit:
 
 clean:
 	@rm -f LocalCode/Sources/afmhelper/afmhelper
-	@rm -f localcode-afm/src/afmhelper
 	@echo "Cleaned built artifacts"
