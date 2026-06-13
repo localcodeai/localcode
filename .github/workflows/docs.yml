@@ -30,7 +30,7 @@ jobs:
         working-directory: docs
 
       - name: Build documentation
-        run: npm run docs:build
+        run: npx vitepress build
         working-directory: docs
 
       - name: Setup Pages
@@ -39,7 +39,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: docs/.vitepress/dist
+          path: .vitepress/dist
 
       - name: Deploy to GitHub Pages
         id: deployment

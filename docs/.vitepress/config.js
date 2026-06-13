@@ -4,6 +4,7 @@ export default defineConfig({
   title: 'LocalCode',
   description: 'Apple Foundation Models for OpenCode - local, privacy-first AI CLI',
   srcDir: '.',
+  outDir: '../.vitepress/dist',
   themeConfig: {
     nav: [
       { text: 'Guide', link: '/' },
