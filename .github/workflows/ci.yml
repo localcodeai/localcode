@@ -14,7 +14,7 @@ jobs:
 
       - name: Validate bash scripts
         run: |
-          for script in start-afm-server.sh setup-localcode.sh pre-commit.sh; do
+          for script in start-afm-server.sh pre-commit.sh; do
             if [ -f "$script" ]; then
               bash -n "$script" && echo "✓ $script is valid" || exit 1
             fi
@@ -29,21 +29,14 @@ jobs:
             exit 1
           fi
 
-  docs:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
       - name: Check README exists
         run: |
           if [ -f "README.md" ]; then
             echo "✓ README.md exists"
-            wc -l README.md
           else
             echo "✗ README.md not found"
             exit 1
           fi
 
-- name: Check docs consistency
+      - name: Check docs consistency
         run: node scripts/sync-docs.js
-        if: runner.os == 'Linux'
