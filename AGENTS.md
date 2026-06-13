@@ -98,13 +98,16 @@ Commit session notes so they can be reviewed later.
 
 **This is a public open source project.** Before every commit:
 
-1. **Update README.md** if you added new features, changed architecture, or modified the workflow
+1. **Update README.md** if you added new features, changed architecture, or modified the workflow - keep architecture diagram in sync with actual files
 2. **Check examples still work** - commands in README should be tested
 3. **Verify docs match code** - if you changed how something works, update the docs
 4. **Update Makefile** if you added new commands or scripts
 5. **Run `make test`** to ensure prompt tests pass
+6. **Update release link** in README if there are breaking changes or significant updates
 
 README is often the first thing new users see. Outdated docs = bad first impression.
+
+**After releases:** Update "[Latest Release](https://github.com/localcodeai/localcode/releases/latest)" link in README if version changed.
 
 ## Agent Commands
 

@@ -24,15 +24,14 @@ LocalCode is a proof-of-concept that integrates Apple Foundation Models (AFM) wi
 LocalCode/
 ├── LocalCode/Sources/afmhelper/   # Swift AFM helper
 │   └── main.swift                # Apple FoundationModels integration
-├── localcode-afm/                 # npm package for distribution
-│   ├── bin/start.sh              # Entry point
-│   ├── package.json              # Package config
-│   └── src/main.swift            # Swift source
 ├── start-afm-server.sh           # HTTP middleware (Bun)
 ├── setup-localcode.sh            # One-command setup script
 ├── pre-commit.sh                 # Pre-commit hook with tests
-└── test-prompts.sh              # Prompt test suite
+├── test-prompts.sh              # Prompt test suite
+└── docs/                        # VitePress documentation site
 ```
+
+**[Latest Release](https://github.com/localcodeai/localcode/releases/latest): v0.0.1-alpha**
 
 **No fork needed** - uses global OpenCode with provider config in `~/.config/opencode/opencode.json`
 
