@@ -1,4 +1,4 @@
-.PHONY: help install start test pre-commit clean server-test
+.PHONY: help install start test pre-commit clean server-test run
 
 help:
 	@echo "LocalCode - Apple Foundation Models for OpenCode"
@@ -71,3 +71,8 @@ pre-commit:
 clean:
 	@rm -f LocalCode/Sources/afmhelper/afmhelper
 	@echo "Cleaned built artifacts"
+
+run:
+	@make install
+	@make start
+	@echo "Server running, now run: opencode"
