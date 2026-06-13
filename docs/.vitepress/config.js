@@ -39,6 +39,7 @@ export default defineConfig({
         items: [
           { text: 'Testing', link: '/testing' },
           { text: 'Architecture', link: '/architecture' },
+          { text: 'Roadmap', link: '/roadmap' },
         ]
       }
     ]
