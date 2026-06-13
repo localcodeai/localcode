@@ -52,3 +52,7 @@ jobs:
             echo "✗ QA-TESTING.md not found"
             exit 1
           fi
+
+      - name: Check docs consistency
+        run: node scripts/sync-docs.js
+        if: runner.os == 'Linux'
