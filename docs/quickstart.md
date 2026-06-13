@@ -1,22 +1,18 @@
 # Quick Start
 
-## 1. Install
+## 1. Install and Start
 
 ```bash
 git clone https://github.com/localcodeai/localcode.git
 cd localcode
-make install
+make run
 ```
 
-## 2. Start Server
-
-```bash
-make start
-```
+This builds the Swift helper, configures OpenCode, and starts the server.
 
 Server runs on `http://localhost:8080`
 
-## 3. Run OpenCode
+## 2. Run OpenCode
 
 ```bash
 opencode

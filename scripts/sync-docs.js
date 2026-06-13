@@ -38,8 +38,13 @@ function check(key, readmePatterns, docPatterns) {
 
 const checks = [
   {
+    key: 'make run',
+    readmePatterns: ['make run'],
+    docPatterns: { file: 'quickstart.md', content: 'make run' }
+  },
+  {
     key: 'make install',
-    readmePatterns: ['make install', 'make start'],
+    readmePatterns: ['make install'],
     docPatterns: { file: 'installation.md', content: 'make install' }
   },
   {
@@ -56,11 +61,6 @@ const checks = [
     key: 'Test commands',
     readmePatterns: ['make test', 'make pre-commit', 'test-prompts.sh'],
     docPatterns: { file: 'testing.md', content: 'make test' }
-  },
-  {
-    key: 'Quick start steps',
-    readmePatterns: ['make install', 'make start', 'opencode'],
-    docPatterns: { file: 'quickstart.md', content: 'make install' }
   },
   {
     key: 'Architecture',

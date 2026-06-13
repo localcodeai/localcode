@@ -8,17 +8,17 @@
 - Bun 1.3+
 - Node 18+
 
-## Setup Script (Recommended)
+## Makefile (Recommended)
 
 ```bash
 git clone https://github.com/localcodeai/localcode.git
 cd localcode
-./setup-localcode.sh
+make install
 ```
 
-This installs:
-- `localcode-afm` command to start the server
-- OpenCode provider configuration
+This:
+- Builds the Swift AFM helper
+- Configures OpenCode provider
 
 ## Manual Setup
 
