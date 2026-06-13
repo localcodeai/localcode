@@ -6,6 +6,7 @@ help:
 	@echo "Usage:"
 	@echo "  make install      Build Swift helper and setup OpenCode config"
 	@echo "  make start        Start the AFM server"
+	@echo "  make run          Install + Start (full setup)"
 	@echo "  make test         Run prompt test suite"
 	@echo "  make server-test  Run server curl tests only"
 	@echo "  make pre-commit   Run all checks (Swift build + server + OpenCode + prompts)"

@@ -48,19 +48,20 @@ LocalCode/
 git clone https://github.com/localcodeai/localcode.git
 cd localcode
 
-make install   # Build Swift helper
-make start      # Start AFM server
+make run        # Install + Start server
 
 opencode        # Select "LocalCode AFM" provider via /models
 ```
 
-### Option 2: Setup Script
+### Option 2: Step by Step
 ```bash
 git clone https://github.com/localcodeai/localcode.git
 cd localcode
-./setup-localcode.sh
-./start-afm-server.sh &
-opencode
+
+make install    # Build Swift helper + configure OpenCode
+make start      # Start AFM server
+
+opencode        # Select "LocalCode AFM" provider via /models
 ```
 
 ### Option 3: Manual
@@ -73,8 +74,10 @@ cd LocalCode/Sources/afmhelper
 swiftc -o afmhelper main.swift -framework FoundationModels -target arm64-apple-macosx26.0
 cd ../..
 
-# Start server and configure OpenCode (see manual config below)
+# Configure OpenCode manually (see ~/.config/opencode/opencode.json)
+# Start server
 ./start-afm-server.sh &
+
 opencode
 ```
 
