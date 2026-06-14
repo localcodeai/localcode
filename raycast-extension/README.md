@@ -1,50 +1,31 @@
-# LocalCode Raycast Extension
+# LocalCode Raycast Script
 
-A Raycast extension that converts natural language to CLI commands using Apple Foundation Models.
+A [Raycast Script Command](https://manual.raycast.com/script-commands) that converts natural language to CLI commands using Apple Foundation Models.
 
 ## Requirements
 
 - Raycast installed
-- LocalCode server running (`make start` in the LocalCode repo)
+- LocalCode server running (`make start`)
 - macOS 26+, Xcode 26+, Apple Silicon Mac
 
 ## Installation
 
-1. Open Raycast
-2. Navigate to `Extensions` (Cmd+, → Extensions)
-3. Click "Import Extension"
-4. Select this folder (`raycast-extension`)
-
-Or use the CLI:
-
-```bash
-cd raycast-extension
-raycast extension install .
-```
+1. Open **Raycast Settings** (Cmd+,) → **Script Commands**
+2. Click **Add Script Directory**
+3. Select `localcode/raycast-extension/scripts/`
 
 ## Usage
 
-1. Press `Cmd+Shift+P` to open the command palette
-2. Type "LocalCode"
-3. Enter a natural language prompt (e.g., "list all python files")
-4. Copy the suggested command or run it directly
+1. Type "LocalCode" in Raycast
+2. Enter a natural language prompt (e.g., "list all python files")
+3. The command is copied to clipboard
+4. Paste in terminal to run
 
-## Configuration
+## Server
 
-Edit `manifest.json` to change the server URL if needed. Default: `http://localhost:8080`
-
-## Development
+The LocalCode server must be running:
 
 ```bash
-cd raycast-extension
-raycast extension dev
-```
-
-## Notes
-
-The LocalCode server must be running for this extension to work:
-
-```bash
-cd /path/to/localcode
+cd localcode
 make start
 ```

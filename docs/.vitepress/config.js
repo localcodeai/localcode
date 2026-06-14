@@ -23,6 +23,7 @@ export default defineConfig({
     nav: [
       { text: 'Guide', link: '/' },
       { text: 'Installation', link: '/installation' },
+      { text: 'Raycast', link: '/raycast' },
       { text: 'Testing', link: '/testing' },
     ],
     sidebar: [
@@ -32,6 +33,12 @@ export default defineConfig({
           { text: 'Introduction', link: '/' },
           { text: 'Installation', link: '/installation' },
           { text: 'Quick Start', link: '/quickstart' },
+        ]
+      },
+      {
+        text: 'Integrations',
+        items: [
+          { text: 'Raycast', link: '/raycast' },
         ]
       },
       {
