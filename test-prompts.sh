@@ -72,6 +72,43 @@ test_prompt "show line counts for code files" "wc" "count_lines"
 echo "=== Simple Commands ==="
 test_prompt "echo hello world" "echo" "simple_echo"
 
+echo "=== Raycast Script Tests ==="
+echo "Testing Raycast script..."
+
+RAYCAST_SCRIPT="raycast-extension/scripts/lc.sh"
+if [ ! -f "$RAYCAST_SCRIPT" ]; then
+    echo "  ✗ Raycast script not found"
+    exit 1
+fi
+
+# Check script has valid metadata header
+if ! head -10 "$RAYCAST_SCRIPT" | grep -q "@raycast.schemaVersion 1"; then
+    echo "  ✗ Missing Raycast metadata header"
+    exit 1
+fi
+echo "  ✓ Script has valid Raycast metadata"
+
+# Test script with echo command (uses server)
+OUTPUT=$(bash "$RAYCAST_SCRIPT" "echo hello" 2>&1)
+if echo "$OUTPUT" | grep -q "Copied:"; then
+    echo "  ✓ Script returns 'Copied:' confirmation"
+else
+    echo "  ✗ Script did not return copy confirmation"
+    echo "  Output: $OUTPUT"
+    exit 1
+fi
+
+# Test with list files prompt
+OUTPUT=$(bash "$RAYCAST_SCRIPT" "list all files" 2>&1)
+if echo "$OUTPUT" | grep -q "Copied:"; then
+    echo "  ✓ Script works with 'list all files' prompt"
+else
+    echo "  ✗ Script failed with 'list all files' prompt"
+    exit 1
+fi
+
+echo ""
+
 echo ""
 echo "========================================"
 echo "Test Results Summary"

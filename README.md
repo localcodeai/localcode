@@ -110,6 +110,22 @@ AFM acts as a command translator - it takes natural language and produces shell 
 **Search:**
 - "grep for hello in this directory"
 
+## Raycast Integration
+
+Add LocalCode as a [Raycast Script Command](https://manual.raycast.com/script-commands) for quick access from anywhere on your Mac:
+
+1. Open **Raycast Settings** → **Script Commands**
+2. Click **Add Script Directory**
+3. Select `localcode/raycast-extension/scripts/`
+4. Type **"LocalCode"** in Raycast to use
+
+The Raycast command:
+1. Enter a description like "list all python files"
+2. Command is generated and **copied to clipboard**
+3. Paste in terminal to run
+
+Requires the AFM server running (`make start`).
+
 ## Testing
 
 ### Makefile Commands
